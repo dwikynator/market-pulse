@@ -1,0 +1,31 @@
+market:
+  provider: yfinance
+  symbols:
+    - symbol: AAPL
+      sector: Information Technology
+    - symbol: JPM
+      sector: Financials
+    - symbol: JNJ
+      sector: Health Care
+    - symbol: AMZN
+      sector: Consumer Discretionary
+    - symbol: CAT
+      sector: Industrials
+    - symbol: XOM
+      sector: Energy
+  historical:
+    period: 1y
+    interval: 1d
+    auto_adjust: false
+  recent:
+    period: 5d
+    interval: 5m
+    auto_adjust: false
+
+economics:
+  provider: fred
+  series:
+    - series_id: DGS10
+      description: 10-Year Treasury Constant Maturity Rate
+    - series_id: CPIAUCSL
+      description: Consumer Price Index for All Urban Consumers
