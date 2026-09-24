@@ -1,4 +1,4 @@
-.PHONY: setup kafka-up kafka-topics kafka-down explore-yfinance explore-fred preview test lint format check
+.PHONY: setup kafka-up kafka-topics kafka-down explore-yfinance explore-fred preview test lint format check preview-batch batch
 
 setup:
 	uv sync
@@ -31,3 +31,9 @@ format:
 	uv run ruff format .
 
 check: lint test
+
+preview-batch:
+	uv run python scripts/preview_batch_sources.py
+
+batch:
+	uv run python -m market_pulse.batch
