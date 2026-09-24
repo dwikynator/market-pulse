@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from market_intelligence.config import get_settings
+from market_pulse.config import get_settings
 
 BASE_URL = "https://api.stlouisfed.org/fred/"
 SERIES_IDS = ("DGS10", "CPIAUCSL")
@@ -57,7 +57,7 @@ def main() -> None:
     saved_series: dict[str, Any] = {}
 
     with httpx.Client(
-        base_url=BASE_URL, timeout=20.0, headers={"User-Agent": "market-intelligence-portflio/0.1"}
+        base_url=BASE_URL, timeout=20.0, headers={"User-Agent": "market-pulse-portfolio/0.1"}
     ) as client:
         for series_id in SERIES_IDS:
             metadata = request_json(

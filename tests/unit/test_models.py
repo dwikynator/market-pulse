@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
-from market_intelligence.models import EconomicObservation, MarketPrice
+from market_pulse.models import EconomicObservation, MarketPrice
 
 
 def valid_market_price(**changes: object) -> MarketPrice:

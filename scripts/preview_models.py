@@ -1,6 +1,6 @@
 from datetime import UTC, date, datetime
 
-from market_intelligence.models import EconomicObservation, MarketPrice
+from market_pulse.models import EconomicObservation, MarketPrice
 
 ingested_at = datetime.now(UTC)
 

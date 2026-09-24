@@ -1,4 +1,4 @@
-name: market-intelligence-platform
+name: market-pulse
 
 services:
   kafka:

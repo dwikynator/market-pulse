@@ -19,3 +19,11 @@ data/
 
 # Operating-system files
 .DS_Store
+
+# Terraform downloads and local state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log

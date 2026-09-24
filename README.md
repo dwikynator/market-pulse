@@ -1,4 +1,4 @@
-# Market Intelligence Data Platform
+# MarketPulse
 
 A compact data-engineering portfolio project that combines daily batch data
 with a small Kafka and Spark streaming path. The workload is intentionally
