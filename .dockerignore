@@ -1,0 +1,11 @@
+.git
+.venv
+.env
+.airflow-aws.env
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+data/
+infrastructure/terraform/.terraform/
+*.tfstate
+*.tfstate.*

@@ -27,3 +27,5 @@ data/
 *.tfplan
 crash.log
 crash.*.log
+
+.airflow-aws.env
