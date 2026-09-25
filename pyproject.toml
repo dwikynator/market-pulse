@@ -11,10 +11,11 @@ dependencies = [
     "boto3>=1.43.101",
     "confluent-kafka>=2.15.1",
     "httpx>=0.28.1",
-    "pandas>=3.0.6",
+    "pandas>=2.2,<3",
     "pyarrow>=25.0.1",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
+    "pyspark==4.2.0",
     "pyyaml>=6.0.3",
     "yfinance>=1.7.0",
 ]

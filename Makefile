@@ -1,3 +1,10 @@
+SPARK_VERSION := 4.2.0
+HADOOP_VERSION := 3.5.0
+KAFKA_SPARK_PACKAGE := org.apache.spark:spark-sql-kafka-0-10_2.13:$(SPARK_VERSION)
+HADOOP_AWS_PACKAGE := org.apache.hadoop:hadoop-aws:$(HADOOP_VERSION)
+SPARK_PACKAGES := $(KAFKA_SPARK_PACKAGE),$(HADOOP_AWS_PACKAGE)
+STREAM_ROOT ?= s3a://$(DATA_BUCKET)/streaming
+
 .PHONY: setup kafka-up kafka-topics kafka-create-topic kafka-down explore-yfinance explore-fred preview preview-batch batch publish-recent publish-fixture test lint format check
 
 setup:
@@ -53,3 +60,18 @@ publish-recent:
 
 publish-fixture:
 	uv run python scripts/publish_price_fixture.py
+
+spark-stream:
+	uv run spark-submit \
+		--packages "$(SPARK_PACKAGES)" \
+		src/market_pulse/spark_prices.py \
+		--output-root "$(STREAM_ROOT)"
+
+spark-inspect:
+	uv run spark-submit \
+		--packages "$(HADOOP_AWS_PACKAGE)" \
+		scripts/inspect_stream_output.py \
+		--output-root "$(STREAM_ROOT)"
+
+publish-spark-demo:
+	uv run python scripts/publish_spark_demo.py
