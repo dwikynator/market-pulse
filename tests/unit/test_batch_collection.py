@@ -72,4 +72,3 @@ def test_batch_keys_are_stable_for_the_same_date() -> None:
     keys = build_keys(date(2026, 9, 23))
     assert keys["market_raw"] == "raw/yfinance/as_of=2026-09-23/prices.json"
     assert keys == build_keys(date(2026, 9, 23))
-
