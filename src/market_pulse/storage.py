@@ -53,8 +53,7 @@ class S3Storage:
     def __init__(self, bucket: str) -> None:
         self.bucket = bucket
         self.client = boto3.client(
-            "s3",
-            config=Config(retries={"mode": "standard", "total_max_attempts": 3})
+            "s3", config=Config(retries={"mode": "standard", "total_max_attempts": 3})
         )
 
     def put_if_changed(
@@ -87,4 +86,3 @@ class S3Storage:
             Metadata={"logical-sha256": logical_hash},
         )
         return "written"
-
