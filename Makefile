@@ -1,4 +1,4 @@
-.PHONY: setup kafka-up kafka-topics kafka-down explore-yfinance explore-fred preview test lint format check preview-batch batch
+.PHONY: setup kafka-up kafka-topics kafka-create-topic kafka-down explore-yfinance explore-fred preview preview-batch batch publish-recent publish-fixture test lint format check
 
 setup:
 	uv sync
@@ -37,3 +37,19 @@ preview-batch:
 
 batch:
 	uv run python -m market_pulse.batch
+
+kafka-create-topic:
+	docker compose exec kafka /opt/kafka/bin/kafka-topics.sh \
+		--bootstrap-server broker:19092 \
+		--create \
+		--if-not-exists \
+		--topic market-prices \
+		--partitions 3 \
+		--replication-factor 1 \
+		--config retention.ms=21600000
+
+publish-recent:
+	uv run python -m market_pulse.kafka_prices
+
+publish-fixture:
+	uv run python scripts/publish_price_fixture.py
