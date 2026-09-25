@@ -1,7 +1,6 @@
 # Spark Streaming — How It Works in MarketPulse
 
 > **Source file:** [`src/market_pulse/spark_prices.py`](../src/market_pulse/spark_prices.py)
-> **Purpose:** Reference doc explaining the pipeline design, key concepts, and configuration choices. Not a setup guide — see `05-spark-streaming-processing.md` for that.
 
 ---
 
@@ -242,14 +241,14 @@ part  - 00001 - 9c1ff122-e5b2-4ada-9d98-2e4862811af3 . c000 . snappy . parquet
 
 ### What controls what
 
-| Segment | Controlled by | Code location |
-| --- | --- | --- |
-| `part-` | Fixed Spark convention | — |
-| `00001` | `spark.sql.shuffle.partitions` | `create_spark_session()` — set to `3`, so you get `00000`–`00002` |
-| UUID | Per-write-job ID Spark generates | — (internal, guarantees uniqueness across micro-batches) |
-| `.c000` | Task attempt counter | — (increments if the task fails and retries) |
-| `.snappy` | Parquet compression codec | Spark default; override with `spark.sql.parquet.compression.codec` |
-| `.parquet` | Output format | `.format("parquet")` in `start_queries()` |
+| Segment    | Controlled by                    | Code location                                                      |
+| ---------- | -------------------------------- | ------------------------------------------------------------------ |
+| `part-`    | Fixed Spark convention           | —                                                                  |
+| `00001`    | `spark.sql.shuffle.partitions`   | `create_spark_session()` — set to `3`, so you get `00000`–`00002`  |
+| UUID       | Per-write-job ID Spark generates | — (internal, guarantees uniqueness across micro-batches)           |
+| `.c000`    | Task attempt counter             | — (increments if the task fails and retries)                       |
+| `.snappy`  | Parquet compression codec        | Spark default; override with `spark.sql.parquet.compression.codec` |
+| `.parquet` | Output format                    | `.format("parquet")` in `start_queries()`                          |
 
 ### Why Spark owns the name
 
@@ -316,9 +315,9 @@ checkpoints/accepted-market-prices/
 
 **`metadata`** — a small JSON file written once when the query first starts. Contains the query name and a generated UUID. Spark uses this to detect if you accidentally point two different queries at the same checkpoint directory.
 
-**`offsets/`** — one file per batch. Each file records the Kafka topic/partition offsets that Spark *plans to read* for that batch. Written before reading begins. If the job crashes after writing `offsets/2` but before writing `commits/2`, Spark knows on restart that batch 2 was started but not committed and replays it.
+**`offsets/`** — one file per batch. Each file records the Kafka topic/partition offsets that Spark _plans to read_ for that batch. Written before reading begins. If the job crashes after writing `offsets/2` but before writing `commits/2`, Spark knows on restart that batch 2 was started but not committed and replays it.
 
-**`commits/`** — one file per batch. Written *after* the sink write succeeds. The pair `offsets/N` + `commits/N` together mean batch N is fully done. If `offsets/N` exists but `commits/N` does not, Spark replays batch N on restart.
+**`commits/`** — one file per batch. Written _after_ the sink write succeeds. The pair `offsets/N` + `commits/N` together mean batch N is fully done. If `offsets/N` exists but `commits/N` does not, Spark replays batch N on restart.
 
 **`sources/`** — stores initial Kafka partition discovery metadata (which partitions exist, earliest offsets). Written once at startup.
 

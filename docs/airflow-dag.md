@@ -1,13 +1,12 @@
 # Airflow DAG: `market_pulse_daily`
 
-> **File:** [`airflow/dags/market_pulse_daily.py`](file:///Users/dwikynator/learning/data-engineering/market-pulse/airflow/dags/market_pulse_daily.py)
-> **Part of:** MarketPulse — Part 6 (Airflow Orchestration)
+> **Source File:** [`airflow/dags/market_pulse_daily.py`](../airflow/dags/market_pulse_daily.py)
 
 ---
 
 ## Overview
 
-The DAG orchestrates the **bounded batch path** of the MarketPulse pipeline. It schedules the existing batch collector (Part 3), verifies the S3 audit summary, and exposes a clear handoff point for the warehouse loader (Part 7).
+The DAG orchestrates the **bounded batch path** of the MarketPulse pipeline. It schedules the existing batch collector, verifies the S3 audit summary, and exposes a clear handoff point for the warehouse loader.
 
 ```mermaid
 flowchart LR
@@ -194,7 +193,7 @@ def collect_batch(as_of: str) -> str:
 
 ### What it does
 
-Runs `python -m market_pulse.batch` — the **exact same entry point** used during manual development in Part 3. Airflow-specific logic never leaks into the collector or storage code.
+Runs `python -m market_pulse.batch`. Airflow-specific logic never leaks into the collector or storage code.
 
 ```mermaid
 sequenceDiagram
@@ -290,11 +289,11 @@ flowchart TD
 
 ### Why the summary and not a raw S3 list?
 
-| Approach                         | What it verifies           | Problem                                                                                        |
-| -------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------- |
-| List S3 objects                  | Objects exist              | Doesn't confirm _all_ objects or their correctness                                             |
-| Read individual Parquet files    | Data content               | Couples the task to internal storage logic                                                     |
-| **Read `summary.json`** (chosen) | Designed completion marker | Confirms all 4 objects succeeded, provides counts and paths, is the same interface Part 7 uses |
+| Approach                         | What it verifies           | Problem                                                     |
+| -------------------------------- | -------------------------- | ----------------------------------------------------------- |
+| List S3 objects                  | Objects exist              | Doesn't confirm _all_ objects or their correctness          |
+| Read individual Parquet files    | Data content               | Couples the task to internal storage logic                  |
+| **Read `summary.json`** (chosen) | Designed completion marker | Confirms all 4 objects succeeded, provides counts and paths |
 
 ### XCom output
 
@@ -322,21 +321,21 @@ Returns a small `dict[str, str]` — intentionally minimal. **Parquet bytes, Dat
 ```python
 @task
 def ready_for_warehouse(summary: dict[str, str]) -> None:
-    print(f"Ready for Part 7: {summary['as_of']}")
+    print(f"Ready for loading: {summary['as_of']}")
     print(f"Completion marker: {summary['audit_uri']}")
 ```
 
 ### What it does
 
-Logs the partition date and the audit URI that Part 7 will use to drive Snowflake loading and dbt transformations. It is an **explicit handoff point**, not a stub.
+Logs the partition date and the audit URI that will be used to drive Snowflake loading and dbt transformations. It is an **explicit handoff point**, not a stub.
 
 ### Why not just skip it?
 
-| Option                                    | Problem                                                                                            |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| End at `inspect_batch_summary`            | No visible downstream boundary — hard to see where Part 7 connects in the graph                    |
-| Add fake Snowflake/dbt calls              | Pretends an implementation exists before it does                                                   |
-| **`ready_for_warehouse` marker** (chosen) | Honest: names exactly what is ready, shows in the graph, leaves a clear insertion point for Part 7 |
+| Option                                    | Problem                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------- |
+| End at `inspect_batch_summary`            | No visible downstream boundary — hard to see where Part 7 connects in the graph |
+| Add fake Snowflake/dbt calls              | Pretends an implementation exists before it does                                |
+| **`ready_for_warehouse` marker** (chosen) | Honest: names exactly what is ready, shows in the graph                         |
 
 ### No retries
 
@@ -373,7 +372,7 @@ flowchart TD
     end
 
     subgraph Handoff["Task: ready_for_warehouse"]
-        RW["Log date + audit URI<br>Part 7 insertion point"]
+        RW["Log date + audit URI<br>Data load insertion point"]
     end
 
     SCHED --> RA
@@ -415,12 +414,12 @@ flowchart LR
 
 ---
 
-## Part 7 Connection Point
+## Next Connection Point
 
 ```mermaid
 flowchart LR
     IBS([inspect_batch_summary]) --> RFW([ready_for_warehouse])
-    IBS --> |Part 7 adds| SNF([load_snowflake])
+    IBS --> |Next adds| SNF([load_snowflake])
     SNF --> DBT([run_dbt])
 
     style RFW fill:#6b7280,color:#fff,stroke:none
@@ -428,4 +427,4 @@ flowchart LR
     style DBT fill:#4f46e5,color:#fff,stroke:none
 ```
 
-Part 7 will add real Snowflake loading and dbt tasks after `inspect_batch_summary` and remove (or rename) `ready_for_warehouse` once those implementations exist.
+Next the data will be loaded to Snowflake and dbt tasks after `inspect_batch_summary` and remove (or rename) `ready_for_warehouse` once those implementations exist.

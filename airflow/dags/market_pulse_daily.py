@@ -102,7 +102,7 @@ def market_pulse_daily():
     @task
     def ready_for_warehouse(summary: dict[str, str]) -> None:
         # Explicit handoff marker for Part 7 (Snowflake + dbt).
-        print(f"Ready for Part 7: {summary['as_of']}")
+        print(f"Ready for loading: {summary['as_of']}")
         print(f"Completion marker: {summary['audit_uri']}")
 
     # TaskFlow infers dependencies from argument passing:
