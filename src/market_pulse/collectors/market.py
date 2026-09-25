@@ -19,10 +19,7 @@ def _python_value(value: Any) -> Any:
 
 
 def dataframe_to_rows(
-    frame: pd.DataFrame,
-    *,
-    symbol: str,
-    interval: Literal["1d", "5m"]
+    frame: pd.DataFrame, *, symbol: str, interval: Literal["1d", "5m"]
 ) -> list[dict[str, Any]]:
     """Convert a yfinance OHLCV DataFrame into a list of standardized record dictionaries."""
     # Ensure Datetime/Date index becomes a regular column and standardize headers
@@ -88,7 +85,7 @@ def collect_market_prices(
     start = as_of - timedelta(days=365)
     # yfinance end date is exclusive, so add 1 day to capture the as_of date
     end_exclusive = as_of + timedelta(days=1)
-    raw_rows: list [dict[str, Any]] = []
+    raw_rows: list[dict[str, Any]] = []
 
     for symbol in symbols:
         # Request one symbol at a time to keep columns flat and isolate failures
@@ -118,3 +115,43 @@ def collect_market_prices(
     return raw_payload, normalize_market_rows(raw_rows, ingested_at=ingested_at)
 
 
+def collect_recent_market_prices(
+    symbols: list[str],
+    *,
+    ingested_at: datetime,
+    limit_per_symbol: int = 3,
+) -> list[MarketPrice]:
+    """Fetch recent 5-minute intraday prices from yfinance for Kafka event streaming."""
+    if limit_per_symbol < 1:
+        raise ValueError("limit_per_symbol must be at least 1")
+
+    records: list[MarketPrice] = []
+
+    for symbol in symbols:
+        # Request up to 5 days to account for weekends, holidays, or early-session gaps
+        frame = yf.download(
+            tickers=symbol,
+            period="5d",
+            interval="5m",
+            auto_adjust=False,
+            actions=False,
+            progress=False,
+            threads=False,
+            ignore_tz=False,
+            multi_level_index=False,
+            timeout=20,
+        )
+        if frame.empty:
+            # Fail fast to prevent publishing an incomplete or misleading event set
+            raise RuntimeError(f"yfinance returned no recent data for {symbol}")
+
+        # Take only the latest bars per symbol to keep the local stream sample small
+        rows = dataframe_to_rows(
+            frame.tail(limit_per_symbol),
+            symbol=symbol,
+            interval="5m",
+        )
+        # Reuse existing normalization to compute consistent models and stable event_ids
+        records.extend(normalize_market_rows(rows, ingested_at=ingested_at))
+
+    return records

@@ -52,7 +52,6 @@ def normalize_fred_series(
     return records
 
 
-
 def collect_fred_observations(
     series_ids: list[str],
     *,
@@ -69,14 +68,11 @@ def collect_fred_observations(
         base_url=BASE_URL,
         timeout=20.0,
         transport=transport,
-        headers={"User-Agent": "market-pulse-portfolio/0.1"}
+        headers={"User-Agent": "market-pulse-portfolio/0.1"},
     ) as client:
         for series_id in series_ids:
             metadata = _request_json(
-                client,
-                "series",
-                api_key=api_key,
-                params={"series_id": series_id}
+                client, "series", api_key=api_key, params={"series_id": series_id}
             )
             # Fetch point-in-time observations as known on the as_of date
             observations = _request_json(
@@ -90,7 +86,7 @@ def collect_fred_observations(
                     "realtime_start": as_of.isoformat(),
                     "realtime_end": as_of.isoformat(),
                     "sort_order": "asc",
-                }
+                },
             )
             series_payloads[series_id] = {
                 "metadata": metadata["seriess"][0],
@@ -107,4 +103,3 @@ def collect_fred_observations(
     }
     records = normalize_fred_series(series_payloads, ingested_at=ingested_at)
     return raw_payload, records
-
