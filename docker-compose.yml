@@ -23,9 +23,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
       KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
     volumes:
-      - kafka-data:/var/lib/kafka/data
+      - kafka-data:/tmp/kraft-combined-logs
     healthcheck:
       test:
         - CMD-SHELL
@@ -34,5 +34,39 @@ services:
       timeout: 5s
       retries: 12
 
+  airflow:
+    build:
+      context: .
+      dockerfile: airflow/Dockerfile
+    container_name: market-airflow
+    command: standalone
+    env_file:
+      - .env
+      - .airflow-aws.env
+    environment:
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AWS_DEFAULT_REGION: ${AWS_REGION:-ap-southeast-1}
+      AWS_REGION: ${AWS_REGION:-ap-southeast-1}
+      DATA_BUCKET: ${DATA_BUCKET:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - airflow-data:/opt/airflow
+      - ./airflow/dags:/opt/airflow/dags:ro
+      - ./airflow/tests:/opt/project/airflow/tests:ro
+      - ./config:/opt/project/config:ro
+      - ./scripts:/opt/project/scripts:ro
+      - ./src:/opt/project/src:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl --fail http://localhost:8080/api/v2/monitor/health || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+
 volumes:
+  airflow-data:
   kafka-data:
