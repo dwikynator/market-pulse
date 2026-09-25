@@ -5,7 +5,10 @@ HADOOP_AWS_PACKAGE := org.apache.hadoop:hadoop-aws:$(HADOOP_VERSION)
 SPARK_PACKAGES := $(KAFKA_SPARK_PACKAGE),$(HADOOP_AWS_PACKAGE)
 STREAM_ROOT ?= s3a://$(DATA_BUCKET)/streaming
 
-.PHONY: setup kafka-up kafka-topics kafka-create-topic kafka-down explore-yfinance explore-fred preview preview-batch batch publish-recent publish-fixture test lint format check
+.PHONY: setup kafka-up kafka-topics kafka-create-topic kafka-down \
+	explore-yfinance explore-fred preview preview-batch batch \
+	publish-recent publish-fixture spark-stream spark-inspect publish-spark-demo \
+	test lint format check airflow-credentials airflow-up airflow-test airflow-down
 
 setup:
 	uv sync
@@ -75,3 +78,17 @@ spark-inspect:
 
 publish-spark-demo:
 	uv run python scripts/publish_spark_demo.py
+
+airflow-credentials:
+	touch .airflow-aws.env
+	chmod 600 .airflow-aws.env
+	aws configure export-credentials --profile $(AWS_PROFILE) --format env-no-export > .airflow-aws.env
+
+airflow-up: airflow-credentials
+	docker compose up -d --build --force-recreate airflow
+
+airflow-test:
+	docker compose exec airflow pytest -q /opt/project/airflow/tests
+
+airflow-down:
+	docker compose stop airflow
